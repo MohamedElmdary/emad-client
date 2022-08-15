@@ -29,15 +29,10 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 
-type IData =
-  | {
-      function: "getTwinBalance";
-      data: { twinId: number };
-    }
-  | {
-      function: "getSomethingElse";
-      data: { twinId: number };
-    };
+interface IData {
+  function: string;
+  args: string;
+}
 
 @Component({
   name: "App",
@@ -66,23 +61,15 @@ export default class App extends Vue {
     const socket = await this.$socket();
 
     socket.onmessage = async ({ data: _data }: { data: { data: IData } }) => {
-      const { data } = JSON.parse(_data as unknown as string);
+      const { data } = JSON.parse(_data as unknown as string) as {
+        data: IData;
+      };
       console.log(data);
 
-      switch (data.function) {
-        case "getTwinBalance": {
-          const grid = await this.$grid(this.mnemonic, this.secret);
-          const twinInfo = await grid.twins.get({
-            id: JSON.parse(data.data as unknown as string).twinId,
-          });
-          return socket.send(
-            JSON.stringify({ event: data.function, data: twinInfo })
-          );
-        }
+      const grid = await this.$grid(this.mnemonic, this.secret);
+      const result = await grid.invoke(data.function, JSON.parse(data.args));
 
-        default:
-          return Promise.resolve(null);
-      }
+      socket.send(JSON.stringify({ event: "invoke", data: result }));
     };
   }
 }
