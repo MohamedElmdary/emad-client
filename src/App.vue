@@ -65,11 +65,16 @@ export default class App extends Vue {
   async created() {
     const socket = await this.$socket();
 
-    socket.onmessage = async ({ data }: { data: IData }) => {
+    socket.onmessage = async ({ data: _data }: { data: { data: IData } }) => {
+      const { data } = JSON.parse(_data as unknown as string);
+      console.log(data);
+
       switch (data.function) {
         case "getTwinBalance": {
           const grid = await this.$grid(this.mnemonic, this.secret);
-          const twinInfo = await grid.twins.get({ id: data.data.twinId });
+          const twinInfo = await grid.twins.get({
+            id: JSON.parse(data.data as unknown as string).twinId,
+          });
           return socket.send(
             JSON.stringify({ event: data.function, data: twinInfo })
           );
