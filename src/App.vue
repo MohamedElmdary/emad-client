@@ -38,30 +38,24 @@ export default class App extends Vue {
   secret = "";
   loading = false;
 
-  onSubmit() {
+  async onSubmit() {
     this.loading = true;
     const { mnemonic, secret } = this;
-    getGrid(mnemonic, secret)
-      .then((grid) => {
-        return grid.twins.get_my_twin_id();
-      })
-      .then((twin) => {
-        console.log({ twin });
-      })
-      .finally(() => {
-        this.loading = false;
-      });
-  }
-
-  async created() {
-    console.log("here?");
+    const grid = await getGrid(mnemonic, secret);
+    await grid.twins.get_my_twin_id();
 
     const socket = await this.$socket();
 
-    socket.send(JSON.stringify({ event: "client_connected", values: "emad" }));
+    socket.send(JSON.stringify({ event: "client_connected" }));
+
+    this.loading = false;
+  }
+
+  async created() {
+    const socket = await this.$socket();
 
     socket.onmessage = (e) => {
-      console.log(e.data);
+      console.log(e, e.data);
       return null;
     };
   }
