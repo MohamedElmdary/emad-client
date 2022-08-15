@@ -54,9 +54,16 @@ export default class App extends Vue {
   }
 
   created() {
-    this.$socket.on("*", (event, data) => {
-      console.log({ event, data });
-    });
+    console.log("here?");
+
+    this.$socket.send(
+      JSON.stringify({ event: "client_connected", values: "emad" })
+    );
+
+    this.$socket.onmessage = (e) => {
+      console.log(e.data);
+      return null;
+    };
   }
 }
 </script>
