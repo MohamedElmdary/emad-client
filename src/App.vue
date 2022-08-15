@@ -53,14 +53,14 @@ export default class App extends Vue {
       });
   }
 
-  created() {
+  async created() {
     console.log("here?");
 
-    this.$socket.send(
-      JSON.stringify({ event: "client_connected", values: "emad" })
-    );
+    const socket = await this.$socket();
 
-    this.$socket.onmessage = (e) => {
+    socket.send(JSON.stringify({ event: "client_connected", values: "emad" }));
+
+    socket.onmessage = (e) => {
       console.log(e.data);
       return null;
     };
