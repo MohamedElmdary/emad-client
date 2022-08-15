@@ -28,7 +28,16 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { getGrid } from "./utils/getGrid";
+
+type IData =
+  | {
+      function: "getTwinBalance";
+      data: { twinId: number };
+    }
+  | {
+      function: "getSomethingElse";
+      data: { twinId: number };
+    };
 
 @Component({
   name: "App",
@@ -41,7 +50,7 @@ export default class App extends Vue {
   async onSubmit() {
     this.loading = true;
     const { mnemonic, secret } = this;
-    const grid = await getGrid(mnemonic, secret);
+    const grid = await this.$grid(mnemonic, secret);
     const twinId = await grid.twins.get_my_twin_id();
 
     const socket = await this.$socket();
@@ -56,9 +65,19 @@ export default class App extends Vue {
   async created() {
     const socket = await this.$socket();
 
-    socket.onmessage = (e) => {
-      console.log(e, e.data);
-      return null;
+    socket.onmessage = async ({ data }: { data: IData }) => {
+      switch (data.function) {
+        case "getTwinBalance": {
+          const grid = await this.$grid(this.mnemonic, this.secret);
+          const twinInfo = await grid.twins.get({ id: data.data.twinId });
+          return socket.send(
+            JSON.stringify({ event: data.function, data: twinInfo })
+          );
+        }
+
+        default:
+          return Promise.resolve(null);
+      }
     };
   }
 }
