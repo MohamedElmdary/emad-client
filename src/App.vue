@@ -42,11 +42,13 @@ export default class App extends Vue {
     this.loading = true;
     const { mnemonic, secret } = this;
     const grid = await getGrid(mnemonic, secret);
-    await grid.twins.get_my_twin_id();
+    const twinId = await grid.twins.get_my_twin_id();
 
     const socket = await this.$socket();
 
-    socket.send(JSON.stringify({ event: "client_connected" }));
+    socket.send(
+      JSON.stringify({ event: "client_connected", data: { twinId } })
+    );
 
     this.loading = false;
   }

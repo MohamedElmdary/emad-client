@@ -7,6 +7,8 @@ const SOCKET = new WebSocket("ws://localhost:8081");
 
 Vue.prototype.$socket = () => {
   return new Promise<WebSocket>((resolve) => {
+    if (SOCKET.readyState === WebSocket.OPEN) return resolve(SOCKET);
+
     SOCKET.onopen = () => {
       resolve(SOCKET);
       SOCKET.onopen = null;
